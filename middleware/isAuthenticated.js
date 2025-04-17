@@ -4,8 +4,13 @@ const catchAsync = require("../utils/catchAsync");
 const User = require("../models/userModel");
 
 const isAuthenticated = catchAsync(async (req, res, next) => {
-  // Get token from cookies or headers
-  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+  let token;
+
+  if (req.cookies.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
     return next(
@@ -13,14 +18,12 @@ const isAuthenticated = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Verify the token
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
   if (!decoded) {
     return next(new AppError("Invalid token. Please log in again.", 401));
   }
 
-  // Find user by decoded id from token
   const currentUser = await User.findById(decoded.id);
 
   if (!currentUser) {
@@ -29,9 +32,7 @@ const isAuthenticated = catchAsync(async (req, res, next) => {
     );
   }
 
-  req.user = currentUser; // Attach the user to the request object
+  req.user = currentUser;
 
   next();
 });
-
-module.exports = isAuthenticated;
