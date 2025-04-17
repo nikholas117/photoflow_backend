@@ -4,6 +4,15 @@ const catchAsync = require("../utils/catchAsync");
 const User = require("../models/userModel");
 
 const isAuthenticated = catchAsync(async (req, res, next) => {
+  // Bypass authentication completely
+  req.user = {
+    _id: "fake-user-id", // Mock user ID
+    name: "Bypassed User", // Mock user data
+    email: "bypass@example.com",
+    role: "user", // Add any default role if needed
+  };
+  return next(); // Skip all checks and proceed
+
   let token;
 
   if (req.cookies.token) {
@@ -33,6 +42,5 @@ const isAuthenticated = catchAsync(async (req, res, next) => {
   }
 
   req.user = currentUser;
-
   next();
 });
